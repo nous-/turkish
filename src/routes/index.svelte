@@ -24,14 +24,13 @@
   
   function newGroup() {
     currentWords = shuffle(words).slice(0, 100);
-    console.log(currentWords)
     index = -1;
     next();
   }
 
   function next() {
     index++;
-    if (index >= words.length) {
+    if (index >= currentWords.length) {
       index = 0;
       currentWords = shuffle(currentWords);
     } else {
@@ -55,12 +54,12 @@
   
   <svelte:window on:keydown={keydown} on:pointerdown={keydown} />
   
-  <div class='select-none absolute text-center w-full top-1/2 text-5xl md:text-6xl -translate-y-1/2 px-2'>
+  <div class='select-none absolute text-center left-1/2 top-1/2 text-5xl md:text-6xl -translate-y-1/2 -translate-x-1/2 px-2 max-w-lg'>
     {currentWord[turkish ? 0 : 1]}
   </div>
 
-  <div class='absolute bottom-0 inset-x-0 text-center md:text-right p-2 text-xs text-gray-500'>
-    <button class='bg-slate-500 rounded text-white px-2 py-1' on:click={newGroup}>Random group of 100</button>
+  <div class='absolute bottom-0 inset-x-0 text-center p-2 text-xs text-gray-500'>
+    <button class='bg-slate-500 rounded text-white px-2 py-1' on:click={newGroup}>New random group of 100</button>
     [Space] or click/tap - {words.length} Cards - v{commitCount} - <a target="_blank" href='https://variancestudios.com'>Made by Andrew Gilgallon</a>
   </div>
 
