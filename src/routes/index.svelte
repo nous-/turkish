@@ -15,18 +15,25 @@
     return array;
   }
   
-  let currentWords = shuffle(words);
-  let index = 0;
+  let currentWords;
+  let index;
   let turkish = false;
   let currentWord;
   let flip = false;
-  next();
-      
+  newGroup();
+  
+  function newGroup() {
+    currentWords = shuffle(words).slice(0, 100);
+    console.log(currentWords)
+    index = -1;
+    next();
+  }
+
   function next() {
     index++;
     if (index >= words.length) {
       index = 0;
-      currentWords = shuffle(words);
+      currentWords = shuffle(currentWords);
     } else {
       turkish = Math.random() > 0.5;
     }
@@ -52,7 +59,8 @@
     {currentWord[turkish ? 0 : 1]}
   </div>
 
-  <div class='absolute bottom-0 right-0 p-2 text-xs text-gray-500'>
+  <div class='absolute bottom-0 inset-x-0 text-center md:text-right p-2 text-xs text-gray-500'>
+    <button class='bg-slate-500 rounded text-white px-2 py-1' on:click={newGroup}>Random group of 100</button>
     [Space] or click/tap - {words.length} Cards - v{commitCount} - <a target="_blank" href='https://variancestudios.com'>Made by Andrew Gilgallon</a>
   </div>
 
