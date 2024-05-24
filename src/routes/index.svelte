@@ -52,14 +52,14 @@
   }
   </script>
   
-  <svelte:window on:keydown={keydown} on:pointerdown={keydown} />
+  <svelte:window on:keydown={keydown} on:click={keydown} />
   
   <div class='select-none absolute text-center w-full top-1/2 text-5xl -translate-y-1/2 md:text-6xl md:left-1/2 md:-translate-x-1/2 px-2 md:max-w-xl'>
     {currentWord[turkish ? 0 : 1]}
   </div>
 
   <div class='absolute bottom-0 inset-x-0 text-center p-2 text-xs text-gray-500'>
-    <button class='bg-slate-500 rounded text-white px-2 py-1' on:pointerdown={newGroup}>New random group of 100</button>
+    <button class='bg-slate-500 rounded text-white px-2 py-1' on:click|stopPropagation={newGroup}>New random group of 100</button>
     [Space] or click/tap - {words.length} Cards - v{commitCount} - <a target="_blank" href='https://variancestudios.com'>Made by Andrew Gilgallon</a>
   </div>
 
