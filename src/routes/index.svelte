@@ -54,7 +54,7 @@
   
   <svelte:window on:keydown={keydown} on:pointerdown={keydown} />
   
-  <div class='select-none absolute text-center left-1/2 top-1/2 text-5xl md:text-6xl -translate-y-1/2 -translate-x-1/2 px-2 md:max-w-lg'>
+  <div class='select-none absolute text-center w-full top-1/2 text-5xl -translate-y-1/2 md:text-6xl md:left-1/2 md:-translate-x-1/2 px-2 md:max-w-xl'>
     {currentWord[turkish ? 0 : 1]}
   </div>
 
