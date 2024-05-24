@@ -59,7 +59,7 @@
   </div>
 
   <div class='absolute bottom-0 inset-x-0 text-center p-2 text-xs text-gray-500'>
-    <button class='bg-slate-500 rounded text-white px-2 py-1' on:click={newGroup}>New random group of 100</button>
+    <button class='bg-slate-500 rounded text-white px-2 py-1' on:pointerdown={newGroup}>New random group of 100</button>
     [Space] or click/tap - {words.length} Cards - v{commitCount} - <a target="_blank" href='https://variancestudios.com'>Made by Andrew Gilgallon</a>
   </div>
 
