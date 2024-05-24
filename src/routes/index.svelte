@@ -1,5 +1,7 @@
 <script>
   import { words as wrds } from '@/words';
+  import { commitHash, commitCount } from '@/build';
+
   const words = wrds.map(word => word.split('|'))
   
   function shuffle(array) {
@@ -44,22 +46,17 @@
   
   <svelte:window on:keydown={keydown} on:pointerdown={keydown} />
   
-  <div>
+  <div class='select-none absolute text-center w-full top-1/2 text-6xl -translate-y-1/2'>
     {currentWord[turkish ? 0 : 1]}
   </div>
-  
+
+  <div class='absolute bottom-0 right-0 p-2 text-xs text-gray-500'>
+    {words.length} Cards - v{commitCount}
+  </div>
+
   <style>
     :global(body) {
       padding: 0;
       margin: 0;
-    }
-    div {
-      user-select: none;
-      position: absolute;
-      text-align: center;
-      width: 100%;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 56px;
     }
   </style>

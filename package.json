@@ -2,6 +2,7 @@
   "name": "turkish",
   "type": "module",
   "scripts": {
+    "prebuild": "node prebuild.cjs",
     "build": "vite build",
     "preview": "vite preview",
     "dev": "vite",
