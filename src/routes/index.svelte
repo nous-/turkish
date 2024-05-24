@@ -40,7 +40,7 @@
   }
   
   function keydown(e) {
-    if (e.code === 'Space' || e.type === 'pointerdown') {
+    if (e.code === 'Space' || e.type === 'click') {
       if (!flip) {
         turkish = !turkish;
         flip = true;
