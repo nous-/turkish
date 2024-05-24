@@ -4,6 +4,7 @@
   "scripts": {
     "prebuild": "node prebuild.cjs",
     "build": "vite build",
+    "cleanwords": "node cleanwords.js",
     "preview": "vite preview",
     "dev": "vite",
     "svelte-check": "svelte-check"
