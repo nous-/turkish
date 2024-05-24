@@ -34,12 +34,14 @@
   }
   
   function keydown(e) {
-    if (!flip) {
-      turkish = !turkish;
-      flip = true;
-    } else {
-      flip = false;
-      next();
+    if (e.code === 'Space' || e.type === 'pointerdown') {
+      if (!flip) {
+        turkish = !turkish;
+        flip = true;
+      } else {
+        flip = false;
+        next();
+      }
     }
   }
   </script>
@@ -51,7 +53,7 @@
   </div>
 
   <div class='absolute bottom-0 right-0 p-2 text-xs text-gray-500'>
-    {words.length} Cards - v{commitCount}
+    [Space] or click/tap - {words.length} Cards - v{commitCount}
   </div>
 
   <style>
