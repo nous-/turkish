@@ -53,7 +53,7 @@
   </div>
 
   <div class='absolute bottom-0 right-0 p-2 text-xs text-gray-500'>
-    [Space] or click/tap - {words.length} Cards - v{commitCount}
+    [Space] or click/tap - {words.length} Cards - v{commitCount} - <a target="_blank" href='https://variancestudios.com'>Made by Andrew Gilgallon</a>
   </div>
 
   <style>
