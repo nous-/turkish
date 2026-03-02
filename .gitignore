@@ -1,4 +1,8 @@
-node_modules
+node_modules/
+audio/
+.env
+.env.*
+!.env.example
 .DS_Store
-.routify
-dist
+*firebase*.json
+.vscode
