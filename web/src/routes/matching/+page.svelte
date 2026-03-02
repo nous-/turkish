@@ -38,18 +38,34 @@
 		return `${AUDIO_BASE}/${encodeURIComponent(path)}?alt=media`;
 	}
 
-	const preloadedAudio = new Map(); // only the current on-screen audio words -> HTMLAudioElement
+	const preloadedAudio = new Map(); // only the current on-screen audio words -> HTMLAudioElement (client-only)
 
-	// Preload feedback sounds so they play immediately
-	const successAudio = new Audio(successUrl);
-	const wrongAudio = new Audio(wrongUrl);
-	successAudio.preload = 'auto';
-	wrongAudio.preload = 'auto';
-	successAudio.load();
-	wrongAudio.load();
+	// Lazy-initialized so prerender/SSR doesn't touch Audio
+	let successAudio = null;
+	let wrongAudio = null;
+
+	function getSuccessAudio() {
+		if (typeof Audio === 'undefined') return null;
+		if (!successAudio) {
+			successAudio = new Audio(successUrl);
+			successAudio.preload = 'auto';
+			successAudio.load();
+		}
+		return successAudio;
+	}
+
+	function getWrongAudio() {
+		if (typeof Audio === 'undefined') return null;
+		if (!wrongAudio) {
+			wrongAudio = new Audio(wrongUrl);
+			wrongAudio.preload = 'auto';
+			wrongAudio.load();
+		}
+		return wrongAudio;
+	}
 
 	function preloadAudioForRound(r) {
-		if (!r?.leftItems) return;
+		if (typeof Audio === 'undefined' || !r?.leftItems) return;
 		preloadedAudio.clear();
 		for (const item of r.leftItems) {
 			if (typeof item === 'object' && item?.type === 'audio' && item.tr) {
@@ -65,6 +81,7 @@
 	}
 
 	function playWord(turkishWord) {
+		if (typeof Audio === 'undefined') return Promise.resolve();
 		const url = getAudioUrl(turkishWord);
 		if (!url) return Promise.resolve();
 		const cached = preloadedAudio.get(turkishWord);
@@ -105,13 +122,19 @@
 	}
 
 	function playSuccess() {
-		successAudio.currentTime = 0;
-		successAudio.play().catch(() => {});
+		const a = getSuccessAudio();
+		if (a) {
+			a.currentTime = 0;
+			a.play().catch(() => {});
+		}
 	}
 
 	function playWrong() {
-		wrongAudio.currentTime = 0;
-		wrongAudio.play().catch(() => {});
+		const a = getWrongAudio();
+		if (a) {
+			a.currentTime = 0;
+			a.play().catch(() => {});
+		}
 	}
 
 	function startRound() {
