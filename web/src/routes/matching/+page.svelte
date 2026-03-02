@@ -202,17 +202,13 @@
 			playSuccess();
 			selectedLeft = null;
 			correctFlash = { left: leftIdx, right: rightIdx };
-			const elapsed = (Date.now() - roundStartedAt) / 1000;
-			if (elapsed >= 30) {
-				roundComplete = true;
+			// No time limit for now — always refill and continue
+			// const elapsed = (Date.now() - roundStartedAt) / 1000;
+			// if (elapsed >= 30) { roundComplete = true; correctFlash = null; } else { ... }
+			setTimeout(() => {
 				correctFlash = null;
-			} else {
-				// Green for 1s, then fade out (400ms), then refill with fade-in
-				setTimeout(() => {
-					correctFlash = null;
-				}, 1000);
-				setTimeout(() => refillSlot(leftIdx, rightIdx), 1400);
-			}
+			}, 1000);
+			setTimeout(() => refillSlot(leftIdx, rightIdx), 1400);
 		} else {
 			currentStreak = 0;
 			wrongFlash = { left: selectedLeft, right: rightIndex };
