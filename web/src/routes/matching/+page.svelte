@@ -6,11 +6,13 @@
 	let round = $state(null);
 	let selectedLeft = $state(null);
 	let matchedPairs = $state([]); // [leftIndex, rightIndex] for each correct match
+	let correctFlash = $state(null); // { left, right } show green, then fade out before refill
 	let wrongFlash = $state(null); // { left, right } to flash red briefly
 	let gridVisible = $state(true);
 	let refilledCells = $state({ left: [], right: [] });
 	let currentStreak = $state(0);
 	let bestStreak = $state(0); // best "correct in a row" this round
+	let totalMatched = $state(0); // total matches this round
 	let roundStartedAt = $state(null); // set on first tap, used to check 30s
 	let roundComplete = $state(false); // 30s elapsed, show summary
 
@@ -141,10 +143,12 @@
 		round = createRound(words);
 		selectedLeft = null;
 		matchedPairs = [];
+		correctFlash = null;
 		wrongFlash = null;
 		refilledCells = { left: [], right: [] };
 		currentStreak = 0;
 		bestStreak = 0;
+		totalMatched = 0;
 		roundStartedAt = null;
 		roundComplete = false;
 		gridVisible = true;
@@ -191,22 +195,30 @@
 		if (correct) {
 			currentStreak += 1;
 			bestStreak = Math.max(bestStreak, currentStreak);
+			totalMatched += 1;
 			const leftIdx = selectedLeft;
 			const rightIdx = rightIndex;
 			matchedPairs = [...matchedPairs, [leftIdx, rightIdx]];
 			playSuccess();
 			selectedLeft = null;
+			correctFlash = { left: leftIdx, right: rightIdx };
 			const elapsed = (Date.now() - roundStartedAt) / 1000;
 			if (elapsed >= 30) {
 				roundComplete = true;
+				correctFlash = null;
 			} else {
-				setTimeout(() => refillSlot(leftIdx, rightIdx), 400);
+				// Green for 1s, then fade out (400ms), then refill with fade-in
+				setTimeout(() => {
+					correctFlash = null;
+				}, 1000);
+				setTimeout(() => refillSlot(leftIdx, rightIdx), 1400);
 			}
 		} else {
 			currentStreak = 0;
 			wrongFlash = { left: selectedLeft, right: rightIndex };
 			playWrong();
-			setTimeout(() => (wrongFlash = null), 400);
+			selectedLeft = null;
+			setTimeout(() => (wrongFlash = null), 600);
 		}
 	}
 
@@ -239,6 +251,20 @@
 
 <div class="flex flex-col items-center justify-center min-h-dvh p-4 box-border">
 	{#if round}
+		{#if roundComplete}
+			<div class="flex flex-col items-center justify-center w-full max-w-sm text-center" role="status" aria-live="polite">
+				<h2 class="text-xl font-semibold text-slate-800 mb-2">Time's up!</h2>
+				<p class="text-slate-600 mb-1">{bestStreak} correct in a row</p>
+				<p class="text-slate-600 mb-6">{totalMatched} matched total</p>
+				<button
+					type="button"
+					onclick={() => startRound()}
+					class="w-full py-3 px-5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors"
+				>
+					Start again
+				</button>
+			</div>
+		{:else}
 		<div
 			class="grid grid-cols-2 gap-x-5 gap-y-3 items-stretch w-full max-w-md transition-opacity duration-200 {gridVisible ? 'opacity-100' : 'opacity-0'}"
 			role="grid"
@@ -246,7 +272,12 @@
 			{#each rows as row}
 				<button
 					type="button"
-					class="min-h-14 w-full flex items-center justify-center py-3 px-4 text-base sm:text-lg border border-slate-300 rounded-lg bg-slate-50 text-center transition-opacity duration-300 hover:enabled:bg-slate-100 disabled:cursor-default {selectedLeft === row ? 'bg-slate-200' : ''} {isLeftMatched(row) ? 'opacity-25 pointer-events-none' : ''} {wrongFlash?.left === row ? 'shake ring-2 ring-red-400' : ''} {refilledCells.left.includes(row) ? 'fade-in' : ''}"
+					class="tile-left min-h-14 w-full flex items-center justify-center py-3 px-4 text-base sm:text-lg border rounded-lg text-center transition-all duration-300 hover:enabled:bg-slate-100 disabled:cursor-default
+					{selectedLeft === row ? 'ring-2 ring-blue-500 border-blue-400 bg-blue-50' : 'border-slate-300 bg-slate-50'}
+					{correctFlash?.left === row ? 'correct-flash' : ''}
+					{isLeftMatched(row) && !correctFlash ? 'opacity-25 pointer-events-none' : ''}
+					{wrongFlash?.left === row ? 'wrong-flash shake' : ''}
+					{refilledCells.left.includes(row) ? 'fade-in' : ''}"
 					role="gridcell"
 					disabled={isLeftMatched(row)}
 					onclick={typeof round.leftItems[row] === 'object' && round.leftItems[row].type === 'audio' ? () => { selectLeft(row); playLeft(round.leftItems[row].tr); } : () => selectLeft(row)}
@@ -265,7 +296,10 @@
 				<div class="min-h-14 flex items-center justify-center" role="gridcell">
 					<button
 						type="button"
-						class="w-full min-h-14 py-3 px-4 text-base sm:text-lg border rounded-lg flex items-center justify-center text-center transition-all duration-200 disabled:cursor-default {isRightMatched(row) ? 'bg-emerald-200 border-emerald-500 opacity-25 pointer-events-none' : 'bg-slate-50 border-slate-300 hover:enabled:bg-slate-100'} {wrongFlash?.right === row ? 'bg-red-100 border-red-400 ring-2 ring-red-400 shake' : ''} {refilledCells.right.includes(row) ? 'fade-in' : ''}"
+						class="tile-right w-full min-h-14 py-3 px-4 text-base sm:text-lg border rounded-lg flex items-center justify-center text-center transition-all duration-300 disabled:cursor-default
+						{correctFlash?.right === row ? 'correct-flash' : isRightMatched(row) ? 'opacity-25 pointer-events-none bg-emerald-100 border-emerald-400' : 'bg-slate-50 border-slate-300 hover:enabled:bg-slate-100'}
+						{wrongFlash?.right === row ? 'wrong-flash shake' : ''}
+						{refilledCells.right.includes(row) ? 'fade-in' : ''}"
 						disabled={isRightMatched(row)}
 						onclick={() => selectRight(row)}
 					>
@@ -274,23 +308,6 @@
 				</div>
 			{/each}
 		</div>
-
-		{#if roundComplete}
-			<div class="fixed inset-0 flex flex-col items-center justify-center bg-slate-900/60 p-4 z-10" role="dialog" aria-labelledby="round-complete-title">
-				<div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-sm w-full text-center">
-					<h2 id="round-complete-title" class="text-xl font-semibold text-slate-800 mb-2">Time's up!</h2>
-					<p class="text-slate-600 mb-6">
-						{bestStreak} correct in a row
-					</p>
-					<button
-						type="button"
-						onclick={() => startRound()}
-						class="w-full py-3 px-5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors"
-					>
-						Start again
-					</button>
-				</div>
-			</div>
 		{/if}
 	{:else}
 		<p>Loading…</p>
@@ -298,6 +315,16 @@
 </div>
 
 <style>
+	.correct-flash {
+		background-color: rgb(187 247 208); /* green-100 */
+		border-color: rgb(34 197 94); /* green-500 */
+		box-shadow: 0 0 0 2px rgb(34 197 94);
+	}
+	.wrong-flash {
+		background-color: rgb(254 226 226); /* red-100 */
+		border-color: rgb(239 68 68); /* red-500 */
+		box-shadow: 0 0 0 2px rgb(239 68 68);
+	}
 	@keyframes shake {
 		0%, 100% { transform: translateX(0); }
 		20% { transform: translateX(-6px); }
@@ -314,6 +341,6 @@
 	}
 	.fade-in {
 		opacity: 0;
-		animation: fadeIn 0.4s ease-out both;
+		animation: fadeIn 0.5s ease-out both;
 	}
 </style>
