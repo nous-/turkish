@@ -9,6 +9,10 @@
 	let wrongFlash = $state(null); // { left, right } to flash red briefly
 	let gridVisible = $state(true);
 	let refilledCells = $state({ left: [], right: [] });
+	let currentStreak = $state(0);
+	let bestStreak = $state(0); // best "correct in a row" this round
+	let roundStartedAt = $state(null); // set on first tap, used to check 30s
+	let roundComplete = $state(false); // 30s elapsed, show summary
 
 	const AUDIO_BASE = (() => {
 		const env = typeof import.meta.env !== 'undefined' && import.meta.env?.PUBLIC_FIREBASE_AUDIO_BASE_URL;
@@ -35,6 +39,14 @@
 	}
 
 	const preloadedAudio = new Map(); // only the current on-screen audio words -> HTMLAudioElement
+
+	// Preload feedback sounds so they play immediately
+	const successAudio = new Audio(successUrl);
+	const wrongAudio = new Audio(wrongUrl);
+	successAudio.preload = 'auto';
+	wrongAudio.preload = 'auto';
+	successAudio.load();
+	wrongAudio.load();
 
 	function preloadAudioForRound(r) {
 		if (!r?.leftItems) return;
@@ -93,13 +105,13 @@
 	}
 
 	function playSuccess() {
-		const audio = new Audio(successUrl);
-		audio.play().catch(() => {});
+		successAudio.currentTime = 0;
+		successAudio.play().catch(() => {});
 	}
 
 	function playWrong() {
-		const audio = new Audio(wrongUrl);
-		audio.play().catch(() => {});
+		wrongAudio.currentTime = 0;
+		wrongAudio.play().catch(() => {});
 	}
 
 	function startRound() {
@@ -108,6 +120,10 @@
 		matchedPairs = [];
 		wrongFlash = null;
 		refilledCells = { left: [], right: [] };
+		currentStreak = 0;
+		bestStreak = 0;
+		roundStartedAt = null;
+		roundComplete = false;
 		gridVisible = true;
 	}
 
@@ -139,22 +155,32 @@
 	}
 
 	function selectLeft(index) {
-		if (round && matchedPairs.some(([l]) => l === index)) return;
+		if (round && (matchedPairs.some(([l]) => l === index) || roundComplete)) return;
+		if (round && roundStartedAt == null) roundStartedAt = Date.now();
 		selectedLeft = index;
 		wrongFlash = null;
 	}
 
 	function selectRight(rightIndex) {
-		if (round == null || selectedLeft == null) return;
+		if (round == null || selectedLeft == null || roundComplete) return;
+		if (roundStartedAt == null) roundStartedAt = Date.now();
 		const correct = round.correctMap[selectedLeft] === rightIndex;
 		if (correct) {
+			currentStreak += 1;
+			bestStreak = Math.max(bestStreak, currentStreak);
 			const leftIdx = selectedLeft;
 			const rightIdx = rightIndex;
 			matchedPairs = [...matchedPairs, [leftIdx, rightIdx]];
 			playSuccess();
 			selectedLeft = null;
-			setTimeout(() => refillSlot(leftIdx, rightIdx), 400);
+			const elapsed = (Date.now() - roundStartedAt) / 1000;
+			if (elapsed >= 30) {
+				roundComplete = true;
+			} else {
+				setTimeout(() => refillSlot(leftIdx, rightIdx), 400);
+			}
 		} else {
+			currentStreak = 0;
 			wrongFlash = { left: selectedLeft, right: rightIndex };
 			playWrong();
 			setTimeout(() => (wrongFlash = null), 400);
@@ -183,6 +209,10 @@
 		if (round) preloadAudioForRound(round);
 	});
 </script>
+
+<svelte:head>
+	<title>Turkish Matching</title>
+</svelte:head>
 
 <div class="flex flex-col items-center justify-center min-h-dvh p-4 box-border">
 	{#if round}
@@ -221,6 +251,24 @@
 				</div>
 			{/each}
 		</div>
+
+		{#if roundComplete}
+			<div class="fixed inset-0 flex flex-col items-center justify-center bg-slate-900/60 p-4 z-10" role="dialog" aria-labelledby="round-complete-title">
+				<div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-sm w-full text-center">
+					<h2 id="round-complete-title" class="text-xl font-semibold text-slate-800 mb-2">Time's up!</h2>
+					<p class="text-slate-600 mb-6">
+						{bestStreak} correct in a row
+					</p>
+					<button
+						type="button"
+						onclick={() => startRound()}
+						class="w-full py-3 px-5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors"
+					>
+						Start again
+					</button>
+				</div>
+			</div>
+		{/if}
 	{:else}
 		<p>Loading…</p>
 	{/if}
